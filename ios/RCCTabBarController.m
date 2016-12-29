@@ -2,10 +2,14 @@
 #import "RCCViewController.h"
 #import "RCTConvert.h"
 #import "RCCManager.h"
+#import "RCTEventDispatcher.h"
 #import "RCCImageHelper.h"
 #import "RCTImageLoader.h"
+#import <objc/runtime.h>
 
 @implementation RCCTabBarController
+
+NSString const *CALLBACK_TABBAR_KEY = @"RCCTabBarController.CALLBACK_TABBAR_KEY";
 
 CGFloat const DEFAULT_ICON_WIDTH = 50.0f;
 CGFloat const DEFAULT_ICON_HEIGHT = 50.0f;
@@ -149,6 +153,9 @@ CGFloat const DEFAULT_ICON_HEIGHT = 50.0f;
   if (selectedIndex && selectedIndex < viewControllers.count) {
     [self setSelectedIndex:selectedIndex];
   }
+  
+  // set tabbar callback events
+  objc_setAssociatedObject(self.tabBar, &CALLBACK_TABBAR_KEY, props[@"eventId"], OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 
   return self;
 }
@@ -268,6 +275,19 @@ CGFloat const DEFAULT_ICON_HEIGHT = 50.0f;
         [self setTabBarItemImageFromRemoteServer:remoteSelectedIcon isSelectedImage:true hasSelectedIcon:hasSelectedIcon toViewController:nil orTabIndex:iTabIndex bridge:bridge];
       }
     }
+}
+
+- (void)tabBar:(UITabBar *)tabBar didSelectItem:(UITabBarItem *)item
+{
+  NSString *callbackId = objc_getAssociatedObject(tabBar, &CALLBACK_TABBAR_KEY);
+  if (!callbackId) return;
+  
+  NSInteger tabIndex = [tabBar.items indexOfObject:item];
+  [[[RCCManager sharedInstance] getBridge].eventDispatcher sendAppEventWithName:callbackId body:@
+   {
+     @"type": @"TabBarItemPress",
+     @"index": [NSString stringWithFormat:@"%i", tabIndex]
+   }];
 }
 
 - (void)setTabBarItemImageFromRemoteServer:(NSDictionary*)remoteIcon isSelectedImage:(Boolean)isSelected hasSelectedIcon:(Boolean)hasSelectedIcon toViewController:(UIViewController *)currentViewController orTabIndex:(NSInteger)tabIndex bridge:(RCTBridge *)bridge

@@ -19,6 +19,7 @@ function startTabBasedApp(params) {
   }
 
   const controllerID = _.uniqueId('controllerID');
+  const tabBarEventID = controllerID + '_events';
   params.tabs.map(function(tab, index) {
     const navigatorID = controllerID + '_nav' + index;
     const screenInstanceID = _.uniqueId('screenInstanceID');
@@ -65,6 +66,7 @@ function startTabBasedApp(params) {
       return (
         <TabBarControllerIOS
           id={controllerID + '_tabs'}
+          eventId={tabBarEventID}
           style={params.tabsStyle}
           selectedIndex={params.selectedIndex}>
           {
@@ -79,7 +81,8 @@ function startTabBasedApp(params) {
                     passProps={{
                     navigatorID: tab.navigationParams.navigatorID,
                     screenInstanceID: tab.navigationParams.screenInstanceID,
-                    navigatorEventID: tab.navigationParams.navigatorEventID
+                    navigatorEventID: tab.navigationParams.navigatorEventID,
+                    tabBarEventID: tabBarEventID
                   }}
                     style={tab.navigationParams.navigatorStyle}
                     leftButtons={tab.navigationParams.navigatorButtons.leftButtons}

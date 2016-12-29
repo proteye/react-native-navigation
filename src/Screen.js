@@ -18,12 +18,15 @@ const NavigationSpecific = {
 };
 
 class Navigator {
-  constructor(navigatorID, navigatorEventID, screenInstanceID) {
+  constructor(navigatorID, navigatorEventID, screenInstanceID, tabBarEventID) {
     this.navigatorID = navigatorID;
     this.screenInstanceID = screenInstanceID;
     this.navigatorEventID = navigatorEventID;
+    this.tabBarEventID = tabBarEventID;
     this.navigatorEventHandler = null;
     this.navigatorEventSubscription = null;
+    this.tabBarEventHandler = null;
+    this.tabBarEventSubscription = null;
   }
 
   push(params = {}) {
@@ -131,6 +134,14 @@ class Navigator {
     }
   }
 
+  setOnTabBarEvent(callback) {
+      this.tabBarEventHandler = callback;
+      if (!this.tabBarEventSubscription) {
+          let Emitter = Platform.OS === 'android' ? DeviceEventEmitter : NativeAppEventEmitter;
+          this.tabBarEventSubscription = Emitter.addListener(this.tabBarEventID, (event) => this.onTabBarEvent(event));
+      }
+  }
+
   handleDeepLink(params = {}) {
     if (!params.link) return;
     const event = {
@@ -148,10 +159,20 @@ class Navigator {
     }
   }
 
+  onTabBarEvent(event) {
+      if (this.tabBarEventHandler) {
+          this.tabBarEventHandler(event);
+      }
+  }
+
   cleanup() {
     if (this.navigatorEventSubscription) {
       this.navigatorEventSubscription.remove();
       delete _allNavigatorEventHandlers[this.navigatorEventID];
+    }
+
+    if (this.tabBarEventSubscription) {
+        this.tabBarEventSubscription.remove();
     }
   }
 }
@@ -163,7 +184,7 @@ export default class Screen extends Component {
   constructor(props) {
     super(props);
     if (props.navigatorID) {
-      this.navigator = new Navigator(props.navigatorID, props.navigatorEventID, props.screenInstanceID);
+      this.navigator = new Navigator(props.navigatorID, props.navigatorEventID, props.screenInstanceID, props.tabBarEventID);
     }
   }
 
