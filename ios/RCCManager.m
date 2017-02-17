@@ -191,7 +191,7 @@
   if (splashView != nil)
   {
     UIViewController *splashVC = [[UIViewController alloc] init];
-    splashVC.view = splashView;
+//    splashVC.view = splashView;
     
     id<UIApplicationDelegate> appDelegate = [UIApplication sharedApplication].delegate;
     appDelegate.window.rootViewController = splashVC;
